@@ -117,7 +117,8 @@ func (r *MongoRepository) FindByID(ID entity.ID) (*entity.Trip, error) {
 // Find retrieves all trips.
 func (r *MongoRepository) Find() ([]*entity.Trip, error) {
 	findOptions := options.Find()
-	cur, err := r.collection.Find(context.TODO(), nil, findOptions)
+	filter := bson.D{{}}
+	cur, err := r.collection.Find(context.TODO(), filter, findOptions)
 
 	if err != nil {
 		return nil, fmt.Errorf("trip.MongoRepository: no trip found (%s)", err)

@@ -3,6 +3,8 @@ package handler
 import (
 	"fmt"
 	"net/http"
+
+	"azure.com/ecovo/trip-service/pkg/trip"
 )
 
 // An Error is an application error that can be handled by a handler.
@@ -21,18 +23,8 @@ func (err Error) String() string {
 func WrapError(err error) *Error {
 	if err == nil {
 		return nil
-		// } else if _, ok := err.(auth.UnauthorizedError); ok {
-		// 	return &Error{http.StatusUnauthorized, "unauthorized", err}
-		// } else if _, ok := err.(entity.ValidationError); ok {
-		// 	return &Error{http.StatusBadRequest, err.Error(), err}
-		// } else if _, ok := err.(user.NotFoundError); ok {
-		// 	return &Error{http.StatusNotFound, "user does not exist", err}
-		// } else if _, ok := err.(user.AlreadyExistsError); ok {
-		// 	return &Error{http.StatusInternalServerError, "user already exists", err}
-		// } else if _, ok := err.(vehicule.NotFoundError); ok {
-		// 	return &Error{http.StatusNotFound, "vehicule does not exist", err}
-		// } else if _, ok := err.(vehicule.WrongUserError); ok {
-		// 	return &Error{http.StatusForbidden, "cannot modify vehicule of another user", err}
+	} else if _, ok := err.(trip.NotFoundError); ok {
+		return &Error{http.StatusNotFound, "trip does not exist", err}
 	} else {
 		return &Error{
 			http.StatusInternalServerError,
