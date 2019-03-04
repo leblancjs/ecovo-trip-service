@@ -37,6 +37,26 @@ func (t *Trip) Validate() error {
 		return ValidationError{"destination is missing"}
 	}
 
+	if t.LeaveAt.IsZero() {
+		return ValidationError{"leaveAt is missing"}
+	}
+
+	if t.ArriveBy.IsZero() {
+		return ValidationError{"arriveBy is missing"}
+	}
+
+	if t.ArriveBy.Before(t.LeaveAt) {
+		return ValidationError{"can't arrive before departure time is missing"}
+	}
+
+	if t.DriverID == "" {
+		return ValidationError{"driverID is missing"}
+	}
+
+	if t.VehicleID == "" {
+		return ValidationError{"vehicle is missing"}
+	}
+
 	if t.Seats < MinimumSeats || t.Seats > MaximumSeats {
 		return ValidationError{fmt.Sprintf("number of seats must be between %d and %d", MinimumSeats, MaximumSeats)}
 	}
