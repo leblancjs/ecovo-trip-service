@@ -93,6 +93,16 @@ It should open a web browser in which you can log in using the Ecovo account cre
 
 This step only needs to be done once, after you've installed the Heroku CLI.
 
+##### Login to the Container Registry
+In order to push images and release them on Heroku, you need to log in to the
+Heroku container registry.
+
+To do so, enter the following command in a terminal:
+
+```
+heroku container:login
+```
+
 ##### Link the Git Repository to the Heroku Application
 To make sure that we deploy the service to the right application on Heroku, we
 need to link the Git repository to the application.
