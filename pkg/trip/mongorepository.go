@@ -20,14 +20,14 @@ type MongoRepository struct {
 
 type document struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	DriverID    primitive.ObjectID `bson:"driverId"`
-	VehicleID   primitive.ObjectID `bson:"vehicleId"`
-	Source      string             `bson:"source"`
-	Destination string             `bson:"destination"`
+	Driver      *entity.Driver     `bson:"driver"`
+	Vehicle     *entity.Vehicle    `bson:"vehicle"`
+	Source      *entity.Map        `bson:"source"`
+	Destination *entity.Map        `bson:"destination"`
 	LeaveAt     time.Time          `bson:"leaveAt"`
 	ArriveBy    time.Time          `bson:"arriveBy"`
 	Seats       int                `bson:"seats"`
-	Stops       []string           `bson:"stops"`
+	Stops       []*entity.Map      `bson:"stops"`
 	Details     *entity.Details    `bson:"details"`
 }
 
@@ -49,21 +49,24 @@ func newDocumentFromEntity(t *entity.Trip) (*document, error) {
 	}
 
 	var driverID primitive.ObjectID
-	driverID, err := primitive.ObjectIDFromHex(t.DriverID.Hex())
+	driverID, err := primitive.ObjectIDFromHex(t.Driver.ID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
 	}
 
 	var vehicleID primitive.ObjectID
-	vehicleID, err = primitive.ObjectIDFromHex(t.VehicleID.Hex())
+	vehicleID, err = primitive.ObjectIDFromHex(t.Vehicle.ID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
 	}
 
+	t.Driver.ID = driverID
+	t.Vehicle.ID = vehicleID
+
 	return &document{
 		id,
-		driverID,
-		vehicleID,
+		t.Driver,
+		t.Vehicle,
 		t.Source,
 		t.Destination,
 		t.LeaveAt,
@@ -77,8 +80,8 @@ func newDocumentFromEntity(t *entity.Trip) (*document, error) {
 func (d document) Entity() *entity.Trip {
 	return &entity.Trip{
 		entity.NewIDFromHex(d.ID.Hex()),
-		entity.NewIDFromHex(d.DriverID.Hex()),
-		entity.NewIDFromHex(d.VehicleID.Hex()),
+		d.Driver,
+		d.Vehicle,
 		d.Source,
 		d.Destination,
 		d.LeaveAt,
@@ -118,6 +121,41 @@ func (r *MongoRepository) FindByID(ID entity.ID) (*entity.Trip, error) {
 func (r *MongoRepository) Find() ([]*entity.Trip, error) {
 	findOptions := options.Find()
 	filter := bson.D{{}}
+	cur, err := r.collection.Find(context.TODO(), filter, findOptions)
+
+	if err != nil {
+		return nil, fmt.Errorf("trip.MongoRepository: no trip found (%s)", err)
+	}
+
+	var trips []*entity.Trip
+	for cur.Next(context.TODO()) {
+		var d document
+		err := cur.Decode(&d)
+		if err != nil {
+			return nil, err
+		}
+		trips = append(trips, d.Entity())
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(context.TODO())
+
+	return trips, nil
+}
+
+// FindByUserID retrieves all trips from a user.
+func (r *MongoRepository) FindByUserID(DriverID entity.ID) ([]*entity.Trip, error) {
+	objectID, err := primitive.ObjectIDFromHex(string(DriverID))
+	if err != nil {
+		return nil, fmt.Errorf("trip.MongoRepository: failed to create object ID")
+	}
+
+	findOptions := options.Find()
+	filter := bson.D{{"driver.id", objectID}}
+
 	cur, err := r.collection.Find(context.TODO(), filter, findOptions)
 
 	if err != nil {

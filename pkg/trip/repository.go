@@ -9,6 +9,7 @@ import (
 type Repository interface {
 	FindByID(ID entity.ID) (*entity.Trip, error)
 	Find() ([]*entity.Trip, error)
+	FindByUserID(userID entity.ID) ([]*entity.Trip, error)
 	Create(trip *entity.Trip) (entity.ID, error)
 	Delete(ID entity.ID) error
 }

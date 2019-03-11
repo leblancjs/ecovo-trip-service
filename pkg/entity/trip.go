@@ -8,14 +8,14 @@ import (
 // Trip contains a trips's information.
 type Trip struct {
 	ID          ID        `json:"id"`
-	DriverID    ID        `json:"driverId"`
-	VehicleID   ID        `json:"vehicleId"`
-	Source      string    `json:"source"`
-	Destination string    `json:"destination"`
+	Driver      *Driver   `json:"driver"`
+	Vehicle     *Vehicle  `json:"vehicle"`
+	Source      *Map      `json:"source"`
+	Destination *Map      `json:"destination"`
 	LeaveAt     time.Time `json:"leaveAt"`
 	ArriveBy    time.Time `json:"arriveBy"`
 	Seats       int       `json:"seats"`
-	Stops       []string  `json:"stops"`
+	Stops       []*Map    `json:"stops"`
 	Details     *Details  `json:"details"`
 }
 
@@ -29,36 +29,45 @@ const (
 
 // Validate validates that the trips's required fields are filled out correctly.
 func (t *Trip) Validate() error {
-	if t.Source == "" {
-		return ValidationError{"source is missing"}
+	if t.LeaveAt.IsZero() && t.ArriveBy.IsZero() {
+		return ValidationError{"leaveAt or arriveBy is missing"}
 	}
 
-	if t.Destination == "" {
-		return ValidationError{"destination is missing"}
+	if !t.LeaveAt.IsZero() && !t.ArriveBy.IsZero() {
+		return ValidationError{"can't have leaveAt and arriveBy"}
 	}
 
-	if t.LeaveAt.IsZero() {
-		return ValidationError{"leaveAt is missing"}
+	if t.Driver.ID.IsZero() {
+		return ValidationError{"Driver's ID is missing"}
 	}
 
-	if t.ArriveBy.IsZero() {
-		return ValidationError{"arriveBy is missing"}
-	}
-
-	if t.ArriveBy.Before(t.LeaveAt) {
-		return ValidationError{"can't arrive before departure time is missing"}
-	}
-
-	if t.DriverID == "" {
-		return ValidationError{"driverID is missing"}
-	}
-
-	if t.VehicleID == "" {
-		return ValidationError{"vehicle is missing"}
+	if t.Vehicle.ID.IsZero() {
+		return ValidationError{"Vehicle's ID is missing"}
 	}
 
 	if t.Seats < MinimumSeats || t.Seats > MaximumSeats {
 		return ValidationError{fmt.Sprintf("number of seats must be between %d and %d", MinimumSeats, MaximumSeats)}
+	}
+
+	if t.Source != nil {
+		err := t.Source.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	if t.Destination != nil {
+		err := t.Destination.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	if t.Driver != nil {
+		err := t.Driver.Validate()
+		if err != nil {
+			return err
+		}
 	}
 
 	if t.Details != nil {

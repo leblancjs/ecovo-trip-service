@@ -7,6 +7,7 @@ require (
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.0
 	github.com/mongodb/mongo-go-driver v0.3.0
+	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20190228161510-8dd112bcdc25 // indirect

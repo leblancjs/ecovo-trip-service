@@ -85,14 +85,27 @@ func GetTrips(service trip.UseCase) Handler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set("Content-Type", "application/json")
 
-		t, err := service.Find()
-		if err != nil {
-			return err
-		}
+		userIDParam, ok := r.URL.Query()["userID"]
 
-		err = json.NewEncoder(w).Encode(t)
-		if err != nil {
-			return err
+		if !ok || len(userIDParam[0]) < 1 {
+			t, err := service.Find()
+			if err != nil {
+				return err
+			}
+			err = json.NewEncoder(w).Encode(t)
+			if err != nil {
+				return err
+			}
+		} else {
+			userID := entity.NewIDFromHex(userIDParam[0])
+			t, err := service.FindByUserID(userID)
+			if err != nil {
+				return err
+			}
+			err = json.NewEncoder(w).Encode(t)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

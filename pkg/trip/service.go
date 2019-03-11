@@ -12,6 +12,7 @@ type UseCase interface {
 	Register(t *entity.Trip) (*entity.Trip, error)
 	FindByID(ID entity.ID) (*entity.Trip, error)
 	Find() ([]*entity.Trip, error)
+	FindByUserID(userID entity.ID) ([]*entity.Trip, error)
 	Delete(ID entity.ID) error
 }
 
@@ -59,6 +60,16 @@ func (s *Service) FindByID(ID entity.ID) (*entity.Trip, error) {
 // Find retrieves all the trips
 func (s *Service) Find() ([]*entity.Trip, error) {
 	t, err := s.repo.Find()
+	if err != nil {
+		return nil, NotFoundError{err.Error()}
+	}
+
+	return t, nil
+}
+
+// FindByUserID retrieves all the trips of a user
+func (s *Service) FindByUserID(userID entity.ID) ([]*entity.Trip, error) {
+	t, err := s.repo.FindByUserID(userID)
 	if err != nil {
 		return nil, NotFoundError{err.Error()}
 	}
