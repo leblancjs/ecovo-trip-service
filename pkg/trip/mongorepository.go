@@ -12,6 +12,14 @@ import (
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 )
 
+const (
+	// DefaultRadius represents the default radius for a location search.
+	DefaultRadius = 2000
+
+	// TimeThreshold represents the time threshold for leaveAt or arriveBy (in hours)
+	TimeThreshold = 12
+)
+
 // A MongoRepository is a repository that performs CRUD operations on trips in
 // a MongoDB collection.
 type MongoRepository struct {
@@ -20,15 +28,16 @@ type MongoRepository struct {
 
 type document struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	Driver      *entity.Driver     `bson:"driver"`
-	Vehicle     *entity.Vehicle    `bson:"vehicle"`
-	Source      *entity.Map        `bson:"source"`
-	Destination *entity.Map        `bson:"destination"`
+	DriverID    primitive.ObjectID `bson:"driverId"`
+	VehicleID   primitive.ObjectID `bson:"vehicleId"`
+	Source      *entity.Point      `bson:"source"`
+	Destination *entity.Point      `bson:"destination"`
 	LeaveAt     time.Time          `bson:"leaveAt"`
 	ArriveBy    time.Time          `bson:"arriveBy"`
 	Seats       int                `bson:"seats"`
-	Stops       []*entity.Map      `bson:"stops"`
+	Stops       []*entity.Point    `bson:"stops"`
 	Details     *entity.Details    `bson:"details"`
+	Steps       []*entity.Point    `bson:"steps"`
 }
 
 func newDocumentFromEntity(t *entity.Trip) (*document, error) {
@@ -44,44 +53,46 @@ func newDocumentFromEntity(t *entity.Trip) (*document, error) {
 		if err != nil {
 			return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
 		}
-
 		id = objectID
 	}
 
 	var driverID primitive.ObjectID
-	driverID, err := primitive.ObjectIDFromHex(t.Driver.ID.Hex())
+	driverID, err := primitive.ObjectIDFromHex(t.DriverID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
 	}
 
 	var vehicleID primitive.ObjectID
-	vehicleID, err = primitive.ObjectIDFromHex(t.Vehicle.ID.Hex())
+	vehicleID, err = primitive.ObjectIDFromHex(t.VehicleID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
 	}
 
-	t.Driver.ID = driverID
-	t.Vehicle.ID = vehicleID
+	var stops = make([]*entity.Point, len(t.Stops))
+	for i, s := range t.Stops {
+		stops[i] = s
+	}
 
 	return &document{
 		id,
-		t.Driver,
-		t.Vehicle,
+		driverID,
+		vehicleID,
 		t.Source,
 		t.Destination,
 		t.LeaveAt,
 		t.ArriveBy,
 		t.Seats,
-		t.Stops,
+		stops,
 		t.Details,
+		t.Steps,
 	}, nil
 }
 
 func (d document) Entity() *entity.Trip {
 	return &entity.Trip{
 		entity.NewIDFromHex(d.ID.Hex()),
-		d.Driver,
-		d.Vehicle,
+		entity.NewIDFromHex(d.DriverID.Hex()),
+		entity.NewIDFromHex(d.VehicleID.Hex()),
 		d.Source,
 		d.Destination,
 		d.LeaveAt,
@@ -89,6 +100,7 @@ func (d document) Entity() *entity.Trip {
 		d.Seats,
 		d.Stops,
 		d.Details,
+		d.Steps,
 	}
 }
 
@@ -114,55 +126,22 @@ func (r *MongoRepository) FindByID(ID entity.ID) (*entity.Trip, error) {
 	if err != nil {
 		return nil, fmt.Errorf("trip.MongoRepository: no trip found with ID \"%s\" (%s)", ID, err)
 	}
+
 	return d.Entity(), nil
 }
 
-// Find retrieves all trips.
-func (r *MongoRepository) Find() ([]*entity.Trip, error) {
+// Find retrieves all trips based on given filters.
+func (r *MongoRepository) Find(f *entity.Filters) ([]*entity.Trip, error) {
 	findOptions := options.Find()
-	filter := bson.D{{}}
-	cur, err := r.collection.Find(context.TODO(), filter, findOptions)
 
+	filter, _ := newDocumentFromFilters(f)
+
+	cur, err := r.collection.Find(context.TODO(), filter, findOptions)
 	if err != nil {
 		return nil, fmt.Errorf("trip.MongoRepository: no trip found (%s)", err)
 	}
 
-	var trips []*entity.Trip
-	for cur.Next(context.TODO()) {
-		var d document
-		err := cur.Decode(&d)
-		if err != nil {
-			return nil, err
-		}
-		trips = append(trips, d.Entity())
-	}
-
-	if err := cur.Err(); err != nil {
-		return nil, err
-	}
-
-	cur.Close(context.TODO())
-
-	return trips, nil
-}
-
-// FindByUserID retrieves all trips from a user.
-func (r *MongoRepository) FindByUserID(DriverID entity.ID) ([]*entity.Trip, error) {
-	objectID, err := primitive.ObjectIDFromHex(string(DriverID))
-	if err != nil {
-		return nil, fmt.Errorf("trip.MongoRepository: failed to create object ID")
-	}
-
-	findOptions := options.Find()
-	filter := bson.D{{"driver.id", objectID}}
-
-	cur, err := r.collection.Find(context.TODO(), filter, findOptions)
-
-	if err != nil {
-		return nil, fmt.Errorf("trip.MongoRepository: no trip found (%s)", err)
-	}
-
-	var trips []*entity.Trip
+	trips := make([]*entity.Trip, 0)
 	for cur.Next(context.TODO()) {
 		var d document
 		err := cur.Decode(&d)
@@ -208,7 +187,7 @@ func (r *MongoRepository) Create(t *entity.Trip) (entity.ID, error) {
 
 // Delete removes the trip with the given ID from the database.
 func (r *MongoRepository) Delete(ID entity.ID) error {
-	objectID, err := primitive.ObjectIDFromHex(string(ID))
+	objectID, err := primitive.ObjectIDFromHex(ID.Hex())
 	if err != nil {
 		return fmt.Errorf("trip.MongoRepository: failed to create object ID")
 	}
@@ -220,4 +199,81 @@ func (r *MongoRepository) Delete(ID entity.ID) error {
 	}
 
 	return nil
+}
+
+func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
+	d := bson.D{}
+
+	if f.DriverID != "" {
+		objectID, err := primitive.ObjectIDFromHex(f.DriverID)
+		if err != nil {
+			return nil, fmt.Errorf("user.MongoRepository: failed to create object ID")
+		}
+
+		d = append(d, bson.E{"driverId", objectID})
+	}
+
+	if f.Seats != nil {
+		d = append(d, bson.E{"seats", *f.Seats})
+	}
+
+	if f.DetailsAnimals != nil {
+		d = append(d, bson.E{"details.animals", *f.DetailsAnimals})
+	}
+
+	if f.DetailsLuggages != nil {
+		d = append(d, bson.E{"details.luggages", *f.DetailsLuggages})
+	}
+
+	if f.DriverRating != nil {
+		d = append(d, bson.E{
+			"driver.driverRating", bson.M{
+				"$gte": f.DriverRating,
+			},
+		})
+	}
+
+	if !f.LeaveAt.IsZero() {
+		d = append(d, bson.E{
+			"leaveAt", bson.M{
+				"$gt": f.LeaveAt.Add(time.Hour * (-TimeThreshold)),
+				"$lt": f.LeaveAt.Add(time.Hour * TimeThreshold),
+			},
+		})
+	}
+
+	radiusThresh := 0
+	if f.RadiusThresh != nil {
+		radiusThresh = *f.RadiusThresh
+	} else {
+		radiusThresh = DefaultRadius
+	}
+
+	if f.DestinationLatitude != nil && f.DestinationLongitude != nil {
+		d = append(d, bson.E{
+			"destination", bson.M{
+				"$near": bson.M{
+					"$geometry": bson.M{
+						"type":        "Point",
+						"coordinates": []float64{*f.DestinationLongitude, *f.DestinationLatitude},
+					},
+					"$maxDistance": radiusThresh,
+				},
+			},
+		})
+	} else if f.SourceLatitude != nil && f.SourceLongitude != nil {
+		d = append(d, bson.E{
+			"source", bson.M{
+				"$near": bson.M{
+					"$geometry": bson.M{
+						"type":        "Point",
+						"coordinates": []float64{*f.SourceLongitude, *f.SourceLatitude},
+					},
+					"$maxDistance": radiusThresh,
+				},
+			},
+		})
+	}
+
+	return d, nil
 }

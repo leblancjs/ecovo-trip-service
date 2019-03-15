@@ -8,8 +8,7 @@ import (
 // operations on trips in a database.
 type Repository interface {
 	FindByID(ID entity.ID) (*entity.Trip, error)
-	Find() ([]*entity.Trip, error)
-	FindByUserID(userID entity.ID) ([]*entity.Trip, error)
+	Find(filters *entity.Filters) ([]*entity.Trip, error)
 	Create(trip *entity.Trip) (entity.ID, error)
 	Delete(ID entity.ID) error
 }

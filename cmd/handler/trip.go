@@ -7,6 +7,7 @@ import (
 	"azure.com/ecovo/trip-service/pkg/entity"
 	"azure.com/ecovo/trip-service/pkg/trip"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 )
 
 // CreateTrip handles a request to create a trip.
@@ -57,14 +58,14 @@ func DeleteTrip(service trip.UseCase) Handler {
 }
 
 // GetTripByID handles a request to retrieve a trip by its unique identifier.
-func GetTripByID(service trip.UseCase) Handler {
+func GetTripByID(tService trip.UseCase) Handler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set("Content-Type", "application/json")
 
 		vars := mux.Vars(r)
 
 		id := entity.NewIDFromHex(vars["id"])
-		t, err := service.FindByID(id)
+		t, err := tService.FindByID(id)
 		if err != nil {
 			return err
 		}
@@ -85,27 +86,22 @@ func GetTrips(service trip.UseCase) Handler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		w.Header().Set("Content-Type", "application/json")
 
-		userIDParam, ok := r.URL.Query()["userID"]
+		var encoder = schema.NewDecoder()
+		var f entity.Filters
 
-		if !ok || len(userIDParam[0]) < 1 {
-			t, err := service.Find()
-			if err != nil {
-				return err
-			}
-			err = json.NewEncoder(w).Encode(t)
-			if err != nil {
-				return err
-			}
-		} else {
-			userID := entity.NewIDFromHex(userIDParam[0])
-			t, err := service.FindByUserID(userID)
-			if err != nil {
-				return err
-			}
-			err = json.NewEncoder(w).Encode(t)
-			if err != nil {
-				return err
-			}
+		err := encoder.Decode(&f, r.URL.Query())
+		if err != nil {
+			return err
+		}
+
+		t, err := service.Find(&f)
+		if err != nil {
+			return err
+		}
+
+		err = json.NewEncoder(w).Encode(t)
+		if err != nil {
+			return err
 		}
 
 		return nil

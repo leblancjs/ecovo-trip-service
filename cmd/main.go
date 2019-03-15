@@ -9,9 +9,11 @@ import (
 	"azure.com/ecovo/trip-service/cmd/handler"
 	"azure.com/ecovo/trip-service/cmd/middleware/auth"
 	"azure.com/ecovo/trip-service/pkg/db"
+	"azure.com/ecovo/trip-service/pkg/route"
 	"azure.com/ecovo/trip-service/pkg/trip"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"googlemaps.github.io/maps"
 )
 
 func main() {
@@ -42,11 +44,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	mapsClient, err := maps.NewClient(maps.WithAPIKey(os.Getenv("API_KEY")))
+
+	routeRepository, err := route.NewGoogleMapsRepository(mapsClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+	routeUseCase := route.NewService(routeRepository)
+
 	tripRepository, err := trip.NewMongoRepository(db.Trips)
 	if err != nil {
 		log.Fatal(err)
 	}
-	tripUseCase := trip.NewService(tripRepository)
+	tripUseCase := trip.NewService(tripRepository, routeUseCase)
 
 	r := mux.NewRouter()
 
@@ -62,6 +72,5 @@ func main() {
 	r.Handle("/trips/{id}", handler.RequestID(handler.Auth(authValidator, handler.DeleteTrip(tripUseCase)))).
 		Methods("DELETE").
 		HeadersRegexp("Content-Type", "application/json")
-
 	log.Fatal(http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, r)))
 }

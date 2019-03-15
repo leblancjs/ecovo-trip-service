@@ -29,6 +29,7 @@ The table below enumerates the different environment variables.
 |DB_PASSWORD|Yes|Password to use to establish the database connection|
 |DB_NAME|Yes|Name of the database to use on the server|
 |DB_CONNECTION_TIMEOUT|No|Time to wait before giving up on connecting to the database|
+|API_KEY|Yes|API key used for google maps API|
 
 ## Build and Test
 ### Prerequisites
@@ -162,21 +163,43 @@ Content-Type: application/json
 ```
 {
     "id": "{id}",
-    "source": "{source}",
-    "destination": "{destination}",
-    "leaveAt: "{leaveAt}",
+    "driver": {
+        "id": "{id}"
+    },
+    "vehicle": {
+        "id": "{id}"
+    },
+    "source": {
+        "longitude": "{longitude}",
+        "latitude": "{latitude}",
+        "name": "{name}"
+    },
+    "destination": {
+        "longitude": "{longitude}",
+        "latitude": "{latitude}",
+        "name": "{name}"
+    },
+    "leaveAt": "{leaveAt}",
     "arriveBy": "{arriveBy}",
-    "driverId": "{driverId}",
-    "vehicleId": "{vehicleId}",
     "seats": "{seats}",
     "stops": [
-        "stop1": "{stop1}",
-        "stop2": "{stop2}"
+        {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": "{name}"
+        }
     ],
     "details": {
-        "animals" : "{0|1}",
-        "luggages": "{0|1|2"}
-    }
+        "animals": "{animals}",
+        "luggages": "{luggages}"
+    },
+    "steps": [
+        {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": ""
+        },
+    ]
 }
 ```
 
@@ -185,18 +208,33 @@ Content-Type: application/json
 * 500 Internal Server Error
 
 ### GET /trips
-#### Required Parameters
+#### Query Parameters
 ##### source (Mandatory)
 The trip's source geographic location.
 
 ##### destination (Mandatory)
 The trip's destination geographic location.
 
+##### radiusThresh
+The trip's source or destination threshold in meters.
+
 ##### leaveAt
 The trip's departure time.
 
 ##### arriveBy
 The trip's arrival time.
+
+##### seats
+The trip's number of seats available.
+
+##### detailsAnimals
+The trip's animals allowance.
+
+##### detailsLuggages
+The trip's luggages size allowed.
+
+##### driverId
+The trip's driver ID (used to get list of trips for a user).
 
 #### Request
 ##### Headers
@@ -219,22 +257,44 @@ Content-Type: application/json
 [
     {
         "id": "{id}",
-        "source": "{source}",
-        "destination": "{destination}",
-        "leaveAt: "{leaveAt}",
+        "driver": {
+            "id": "{id}"
+        },
+        "vehicle": {
+            "id": "{id}"
+        },
+        "source": {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": "{name}"
+        },
+        "destination": {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": "{name}"
+        },
+        "leaveAt": "{leaveAt}",
         "arriveBy": "{arriveBy}",
-        "driverId": "{driverId}",
-        "vehicleId": "{vehicleId}",
         "seats": "{seats}",
         "stops": [
-            "stop1": "{stop1}",
-            "stop2": "{stop2}"
+            {
+                "longitude": "{longitude}",
+                "latitude": "{latitude}",
+                "name": "{name}"
+            }
         ],
         "details": {
-            "animals" : "{0|1}",
-            "luggages": "{0|1|2"}
-        }
-    }
+            "animals": "{animals}",
+            "luggages": "{luggages}"
+        },
+        "steps": [
+            {
+                "longitude": "{longitude}",
+                "latitude": "{latitude}",
+                "name": ""
+            },
+        ]
+    },
 ]
 ```
 
@@ -253,21 +313,43 @@ Authorization: Bearer {access_token}
 ##### Body
 ```
 {
-    "source": "{source}",
-    "destination": "{destination}",
-    "leaveAt: "{leaveAt}",
+    "driver": {
+        "id": "{id}"
+    },
+    "vehicle": {
+        "id": "{id}"
+    },
+    "source": {
+        "longitude": "{longitude}",
+        "latitude": "{latitude}",
+        "name": "{name}"
+    },
+    "destination": {
+        "longitude": "{longitude}",
+        "latitude": "{latitude}",
+        "name": "{name}"
+    },
+    "leaveAt": "{leaveAt}",
     "arriveBy": "{arriveBy}",
-    "driverId": "{driverId}",
-    "vehicleId": "{vehicleId}",
     "seats": "{seats}",
     "stops": [
-        "stop1": "{stop1}",
-        "stop2": "{stop2}"
+        {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": ""
+        }
     ],
     "details": {
-        "animals" : "{0|1}",
-        "luggages": "{0|1|2"}
-    }
+        "animals": "{animals}",
+        "luggages": "{luggages}"
+    },
+    "steps": [
+        {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": ""
+        }
+    ],
 }
 ```
 
@@ -284,21 +366,43 @@ Content-Type: application/json
 ```
 {
     "id": "{id}",
-    "source": "{source}",
-    "destination": "{destination}",
-    "leaveAt: "{leaveAt}",
+    "driver": {
+        "id": "{id}"
+    },
+    "vehicle": {
+        "id": "{id}"
+    },
+    "source": {
+        "longitude": "{longitude}",
+        "latitude": "{latitude}",
+        "name": "{name}"
+    },
+    "destination": {
+        "longitude": "{longitude}",
+        "latitude": "{latitude}",
+        "name": "{name}"
+    },
+    "leaveAt": "{leaveAt}",
     "arriveBy": "{arriveBy}",
-    "driverId": "{driverId}",
-    "vehicleId": "{vehicleId}",
     "seats": "{seats}",
     "stops": [
-        "stop1": "{stop1}",
-        "stop2": "{stop2}"
+        {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": "{name}"
+        }
     ],
     "details": {
-        "animals" : "{0|1}",
-        "luggages": "{0|1|2"}
-    }
+        "animals": "{animals}",
+        "luggages": "{luggages}"
+    },
+    "steps": [
+        {
+            "longitude": "{longitude}",
+            "latitude": "{latitude}",
+            "name": ""
+        },
+    ]
 }
 ```
 
