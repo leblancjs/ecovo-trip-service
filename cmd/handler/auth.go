@@ -13,9 +13,19 @@ import (
 //
 // The authenticated user's information placed in the request's context and can
 // be accessed by using the auth.FromContext utility function.
-func Auth(validator auth.Validator, next Handler) Handler {
+func Auth(validators []auth.Validator, next Handler) Handler {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		userInfo, err := validator.Validate(r.Header.Get("Authorization"))
+		header := r.Header.Get("Authorization")
+
+		var err error
+		var userInfo *auth.UserInfo
+		for _, v := range validators {
+			userInfo, err = v.Validate(header)
+			if err == nil {
+				break
+			}
+		}
+
 		if err != nil {
 			return err
 		}

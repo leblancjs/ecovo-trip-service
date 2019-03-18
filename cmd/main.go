@@ -23,11 +23,18 @@ func main() {
 	}
 
 	authConfig := auth.Config{
-		Domain: os.Getenv("AUTH_DOMAIN")}
-	authValidator, err := auth.NewTokenValidator(&authConfig)
+		Domain:               os.Getenv("AUTH_DOMAIN"),
+		BasicAuthCredentials: os.Getenv("AUTH_CREDENTIALS"),
+	}
+	authBasicAuthValidator, err := auth.NewBasicAuthValidator(&authConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
+	authTokenValidator, err := auth.NewTokenValidator(&authConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	authValidators := []auth.Validator{authBasicAuthValidator, authTokenValidator}
 
 	dbConnectionTimeout, err := time.ParseDuration(os.Getenv("DB_CONNECTION_TIMEOUT") + "s")
 	if err != nil {
@@ -61,15 +68,15 @@ func main() {
 	r := mux.NewRouter()
 
 	// Trips
-	r.Handle("/trips", handler.RequestID(handler.Auth(authValidator, handler.GetTrips(tripUseCase)))).
+	r.Handle("/trips", handler.RequestID(handler.Auth(authValidators, handler.GetTrips(tripUseCase)))).
 		Methods("GET")
-	r.Handle("/trips/{id}", handler.RequestID(handler.Auth(authValidator, handler.GetTripByID(tripUseCase)))).
+	r.Handle("/trips/{id}", handler.RequestID(handler.Auth(authValidators, handler.GetTripByID(tripUseCase)))).
 		Methods("GET").
 		Headers("Content-Type", "application/json")
-	r.Handle("/trips", handler.RequestID(handler.Auth(authValidator, handler.CreateTrip(tripUseCase)))).
+	r.Handle("/trips", handler.RequestID(handler.Auth(authValidators, handler.CreateTrip(tripUseCase)))).
 		Methods("POST").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
-	r.Handle("/trips/{id}", handler.RequestID(handler.Auth(authValidator, handler.DeleteTrip(tripUseCase)))).
+	r.Handle("/trips/{id}", handler.RequestID(handler.Auth(authValidators, handler.DeleteTrip(tripUseCase)))).
 		Methods("DELETE").
 		HeadersRegexp("Content-Type", "application/json")
 	log.Fatal(http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, r)))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"azure.com/ecovo/trip-service/cmd/middleware/auth"
 	"azure.com/ecovo/trip-service/pkg/trip"
 )
 
@@ -23,6 +24,8 @@ func (err Error) String() string {
 func WrapError(err error) *Error {
 	if err == nil {
 		return nil
+	} else if _, ok := err.(auth.UnauthorizedError); ok {
+		return &Error{http.StatusUnauthorized, "unauthorized", err}
 	} else if _, ok := err.(trip.NotFoundError); ok {
 		return &Error{http.StatusNotFound, "trip does not exist", err}
 	} else {

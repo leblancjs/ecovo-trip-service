@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // UserInfo contains a user's basic information extracted from an access token.
@@ -22,6 +23,9 @@ type UserInfo struct {
 type Config struct {
 	// Domain represents the domain where the user info endpoint is hosted.
 	Domain string
+	// BasicAuthCredentials represents the base64 encoded username and password
+	// used to authenticate another service with basic auth.
+	BasicAuthCredentials string
 }
 
 // Validate looks at the configuration's contents to ensure it has all the
@@ -90,6 +94,43 @@ func (validator *TokenValidator) Validate(authHeader string) (*UserInfo, error) 
 		return nil, UnauthorizedError{fmt.Sprintf("auth: failed to decode user info (%s)", err)}
 	}
 	return &userInfo, nil
+}
+
+// A BasicAuthValidator is a validator that validates a base64 encoded username
+// and password is the same as the one that is configured.
+type BasicAuthValidator struct {
+	conf *Config
+}
+
+// NewBasicAuthValidator creates a new token validator with the given
+// configuration.
+func NewBasicAuthValidator(conf *Config) (Validator, error) {
+	if conf == nil {
+		return nil, fmt.Errorf("auth: missing configuration")
+	}
+
+	err := conf.validate()
+	if err != nil {
+		return nil, fmt.Errorf("auth: configuration %s", err)
+	}
+
+	return &BasicAuthValidator{conf}, nil
+}
+
+// Validate compares the authorization header with the base64 encoded username
+// and password stored in its configuration. It does not return the
+// authenticated user's information, since there is no user.
+func (validator *BasicAuthValidator) Validate(authHeader string) (*UserInfo, error) {
+	headerParts := strings.Split(authHeader, " ")
+	if len(headerParts) < 2 {
+		return nil, UnauthorizedError{"auth: failed to parse authorization header"}
+	}
+
+	if strings.Compare(headerParts[1], validator.conf.BasicAuthCredentials) == 0 {
+		return &UserInfo{}, nil
+	}
+
+	return nil, UnauthorizedError{"auth: failed to decode user info"}
 }
 
 type contextKey string
