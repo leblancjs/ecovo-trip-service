@@ -26,7 +26,7 @@ func main() {
 		Domain:               os.Getenv("AUTH_DOMAIN"),
 		BasicAuthCredentials: os.Getenv("AUTH_CREDENTIALS"),
 	}
-	authBasicAuthValidator, err := auth.NewBasicAuthValidator(&authConfig)
+	authBasicValidator, err := auth.NewBasicAuthValidator(&authConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +34,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	authValidators := []auth.Validator{authBasicAuthValidator, authTokenValidator}
+	authValidators := map[string]auth.Validator{
+		"basic":  authBasicValidator,
+		"bearer": authTokenValidator,
+	}
 
 	dbConnectionTimeout, err := time.ParseDuration(os.Getenv("DB_CONNECTION_TIMEOUT") + "s")
 	if err != nil {

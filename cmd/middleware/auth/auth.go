@@ -43,7 +43,7 @@ func (conf *Config) validate() error {
 type Validator interface {
 	// Validate validates an authorization and returns the authenticated user's
 	// information.
-	Validate(authHeader string) (*UserInfo, error)
+	Validate(credentials string) (*UserInfo, error)
 }
 
 // A TokenValidator is a validator that validates a bearer token in an
@@ -71,13 +71,13 @@ func NewTokenValidator(conf *Config) (Validator, error) {
 // in the token validator's configuration to validate the bearer token present
 // in the authorization header and returns the authenticated user's
 // information.
-func (validator *TokenValidator) Validate(authHeader string) (*UserInfo, error) {
+func (validator *TokenValidator) Validate(credentials string) (*UserInfo, error) {
 	req, err := http.NewRequest("GET", "https://"+validator.conf.Domain+"/userinfo", nil)
 	if err != nil {
 		return nil, UnauthorizedError{fmt.Sprintf("auth.TokenValidator: failed to create request (%s)", err)}
 	}
 
-	req.Header.Set("Authorization", authHeader)
+	req.Header.Set("Authorization", "Bearer "+credentials)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -120,13 +120,8 @@ func NewBasicAuthValidator(conf *Config) (Validator, error) {
 // Validate compares the authorization header with the base64 encoded username
 // and password stored in its configuration. It does not return the
 // authenticated user's information, since there is no user.
-func (validator *BasicAuthValidator) Validate(authHeader string) (*UserInfo, error) {
-	headerParts := strings.Split(authHeader, " ")
-	if len(headerParts) < 2 {
-		return nil, UnauthorizedError{"auth: failed to parse authorization header"}
-	}
-
-	if strings.Compare(headerParts[1], validator.conf.BasicAuthCredentials) == 0 {
+func (validator *BasicAuthValidator) Validate(credentials string) (*UserInfo, error) {
+	if strings.Compare(credentials, validator.conf.BasicAuthCredentials) == 0 {
 		return &UserInfo{}, nil
 	}
 

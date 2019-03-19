@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"azure.com/ecovo/trip-service/cmd/middleware/auth"
 )
@@ -13,19 +15,23 @@ import (
 //
 // The authenticated user's information placed in the request's context and can
 // be accessed by using the auth.FromContext utility function.
-func Auth(validators []auth.Validator, next Handler) Handler {
+func Auth(validators map[string]auth.Validator, next Handler) Handler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		header := r.Header.Get("Authorization")
 
-		var err error
-		var userInfo *auth.UserInfo
-		for _, v := range validators {
-			userInfo, err = v.Validate(header)
-			if err == nil {
-				break
-			}
+		authType, authCredentials, err := parseHeader(header)
+		if err != nil {
+			return auth.UnauthorizedError{Msg: fmt.Sprintf("auth: %s", err)}
 		}
 
+		authType = strings.ToLower(authType)
+
+		v, ok := validators[authType]
+		if !ok {
+			return auth.UnauthorizedError{Msg: fmt.Sprintf("auth: no validator found for %s", authType)}
+		}
+
+		userInfo, err := v.Validate(authCredentials)
 		if err != nil {
 			return err
 		}
@@ -35,4 +41,13 @@ func Auth(validators []auth.Validator, next Handler) Handler {
 
 		return nil
 	}
+}
+
+func parseHeader(header string) (string, string, error) {
+	headerParts := strings.Split(header, " ")
+	if len(headerParts) < 2 {
+		return "", "", fmt.Errorf("failed to parse authorization header")
+	}
+
+	return headerParts[0], headerParts[1], nil
 }
