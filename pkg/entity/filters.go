@@ -14,20 +14,11 @@ type Filters struct {
 	DetailsAnimals       *int      `schema:"detailsAnimals,ommitempty"`
 	DetailsLuggages      *int      `schema:"detailsLuggages,ommitempty"`
 	RadiusThresh         *int      `schema:"radiusThresh,ommitempty"`
-	SourceLatitude       *float64  `schema:"sourceLatitude,ommitempty"`
-	SourceLongitude      *float64  `schema:"sourceLongitude,ommitempty"`
 	DestinationLatitude  *float64  `schema:"destinationLatitude,ommitempty"`
 	DestinationLongitude *float64  `schema:"destinationLongitude,ommitempty"`
-	DriverRating         *int      `schema:"driverRating,ommitempty"`
 }
 
 const (
-	// MinimumRating represents the minimum value a rating can be given
-	MinimumRating = 1
-
-	// MaximumRating represents the maximum value a rating can be given
-	MaximumRating = 5
-
 	// MinimumLuggagesValue represents the minimum value for luggages
 	MinimumLuggagesValue = 0
 
@@ -66,24 +57,12 @@ func (f *Filters) Validate() error {
 		return ValidationError{fmt.Sprintf("radiusThresh must be greater than %d", MinimumRadiusThresh)}
 	}
 
-	if f.SourceLongitude != nil && (*f.SourceLongitude < MinimumLongitude || *f.SourceLongitude > MaximumLongitude) {
-		return ValidationError{"invalid source longitude value"}
-	}
-
 	if f.DestinationLongitude != nil && (*f.DestinationLongitude < MinimumLongitude || *f.DestinationLongitude > MaximumLongitude) {
 		return ValidationError{"invalid destination longitude value"}
 	}
 
-	if f.SourceLatitude != nil && (*f.SourceLatitude < MinimumLatitude || *f.SourceLatitude > MaximumLatitude) {
-		return ValidationError{"invalid source latitude value"}
-	}
-
 	if f.DestinationLatitude != nil && (*f.DestinationLatitude < MinimumLatitude || *f.DestinationLatitude > MaximumLatitude) {
 		return ValidationError{"invalid destination latitude value"}
-	}
-
-	if f.DriverRating != nil && (*f.DriverRating < MinimumRating || *f.DriverRating > MaximumRating) {
-		return ValidationError{fmt.Sprintf("driverRating must be between %d and %d (inclusivly)", MinimumRating, MaximumRating)}
 	}
 
 	return nil

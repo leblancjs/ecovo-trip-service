@@ -7,16 +7,15 @@ import (
 
 // Trip contains a trips's information.
 type Trip struct {
-	ID          ID        `json:"id"`
-	DriverID    ID        `json:"driverId"`
-	VehicleID   ID        `json:"vehicleId"`
-	Source      *Point    `json:"source"`
-	Destination *Point    `json:"destination"`
-	LeaveAt     time.Time `json:"leaveAt"`
-	ArriveBy    time.Time `json:"arriveBy"`
-	Seats       int       `json:"seats"`
-	Stops       []*Point  `json:"stops"`
-	Details     *Details  `json:"details"`
+	ID        ID        `json:"id"`
+	DriverID  ID        `json:"driverId"`
+	VehicleID ID        `json:"vehicleId"`
+	Full      bool      `json:"full"`
+	LeaveAt   time.Time `json:"leaveAt"`
+	ArriveBy  time.Time `json:"arriveBy"`
+	Seats     int       `json:"seats"`
+	Stops     []*Stop   `json:"stops"`
+	Details   *Details  `json:"details"`
 }
 
 const (
@@ -57,25 +56,24 @@ func (t *Trip) Validate() error {
 		return ValidationError{fmt.Sprintf("number of seats must be between %d and %d", MinimumSeats, MaximumSeats)}
 	}
 
-	if t.Source != nil {
-		err := t.Source.Validate()
-		if err != nil {
-			return err
-		}
-	}
-
-	if t.Destination != nil {
-		err := t.Destination.Validate()
-		if err != nil {
-			return err
-		}
-	}
-
 	if t.Details != nil {
 		err := t.Details.Validate()
 		if err != nil {
 			return err
 		}
+	} else {
+		return ValidationError{"missing details"}
+	}
+
+	if t.Stops != nil {
+		for _, s := range t.Stops {
+			err := s.Validate()
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		return ValidationError{"missing stops"}
 	}
 
 	return nil

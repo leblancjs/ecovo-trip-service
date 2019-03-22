@@ -162,36 +162,48 @@ Content-Type: application/json
 ##### Body
 ```
 {
-    "id": "{id}",
-    "driver": {
-        "id": "{id}"
-    },
-    "vehicle": {
-        "id": "{id}"
-    },
-    "source": {
-        "longitude": "{longitude}",
-        "latitude": "{latitude}",
-        "name": "{name}"
-    },
-    "destination": {
-        "longitude": "{longitude}",
-        "latitude": "{latitude}",
-        "name": "{name}"
-    },
-    "leaveAt": "{leaveAt}",
-    "arriveBy": "{arriveBy}",
-    "seats": "{seats}",
+    "id": {{id}},
+    "driverId": {{driverId}},
+    "vehicleId": {{vehicleId}},
+    "full": {{full}},
+    "leaveAt": {{leaveAt}},
+    "arriveBy": {{arriveBy}},
+    "seats": {{seats}},
     "stops": [
+    	{
+    		"id": {{id}},
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	},
+            "seats": {{seats}},
+            "timestamp": {{timestamp}}
+    	},
         {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": "{name}"
-        }
+        	"id": {{id}},
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	},
+            "seats": {{seats}},
+            "timestamp": {{timestamp}}
+        },
+        {
+            "id": {{id}},
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	},
+            "seats": {{seats}},
+            "timestamp": {{timestamp}}
+    	}
     ],
     "details": {
-        "animals": "{animals}",
-        "luggages": "{luggages}"
+        "animals": {{animals}},
+        "luggages": {{luggages}}
     }
 }
 ```
@@ -249,36 +261,48 @@ Content-Type: application/json
 ```
 [
     {
-        "id": "{id}",
-        "driver": {
-            "id": "{id}"
-        },
-        "vehicle": {
-            "id": "{id}"
-        },
-        "source": {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": "{name}"
-        },
-        "destination": {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": "{name}"
-        },
-        "leaveAt": "{leaveAt}",
-        "arriveBy": "{arriveBy}",
-        "seats": "{seats}",
+        "id": {{id}},
+        "driverId": {{driverId}},
+        "vehicleId": {{vehicleId}},
+        "full": {{full}},
+        "leaveAt": {{leaveAt}},
+        "arriveBy": {{arriveBy}},
+        "seats": {{seats}},
         "stops": [
             {
-                "longitude": "{longitude}",
-                "latitude": "{latitude}",
-                "name": "{name}"
+                "id": {{id}},
+                "point": {
+                    "name": {{name}},
+                    "longitude": {{longitude}},
+                    "latitude": {{latitude}}
+                },
+                "seats": {{seats}},
+                "timestamp": {{timestamp}}
+            },
+            {
+                "id": {{id}},
+                "point": {
+                    "name": {{name}},
+                    "longitude": {{longitude}},
+                    "latitude": {{latitude}}
+                },
+                "seats": {{seats}},
+                "timestamp": {{timestamp}}
+            },
+            {
+                "id": {{id}},
+                "point": {
+                    "name": {{name}},
+                    "longitude": {{longitude}},
+                    "latitude": {{latitude}}
+                },
+                "seats": {{seats}},
+                "timestamp": {{timestamp}}
             }
         ],
         "details": {
-            "animals": "{animals}",
-            "luggages": "{luggages}"
+            "animals": {{animals}},
+            "luggages": {{luggages}}
         }
     },
 ]
@@ -299,35 +323,38 @@ Authorization: Bearer {access_token}
 ##### Body
 ```
 {
-    "driver": {
-        "id": "{id}"
-    },
-    "vehicle": {
-        "id": "{id}"
-    },
-    "source": {
-        "longitude": "{longitude}",
-        "latitude": "{latitude}",
-        "name": "{name}"
-    },
-    "destination": {
-        "longitude": "{longitude}",
-        "latitude": "{latitude}",
-        "name": "{name}"
-    },
-    "leaveAt": "{leaveAt}",
-    "arriveBy": "{arriveBy}",
-    "seats": "{seats}",
+    "driverId": {{driverId}},
+    "vehicleId": {{vehicleId}},
+    "full": {{full}},
+    "leaveAt": {{leaveAt}},
+    "arriveBy": {{arriveBy}},
+    "seats": {{seats}},
     "stops": [
+    	{
+    		"point": {
+    			"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+    		}
+    	},
         {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": ""
-        }
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	}
+        },
+        {
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	}
+    	}
     ],
     "details": {
-        "animals": "{animals}",
-        "luggages": "{luggages}"
+        "animals": {{animals}},
+        "luggages": {{luggages}}
     }
 }
 ```
@@ -344,36 +371,48 @@ Content-Type: application/json
 ##### Body
 ```
 {
-    "id": "{id}",
-    "driver": {
-        "id": "{id}"
-    },
-    "vehicle": {
-        "id": "{id}"
-    },
-    "source": {
-        "longitude": "{longitude}",
-        "latitude": "{latitude}",
-        "name": "{name}"
-    },
-    "destination": {
-        "longitude": "{longitude}",
-        "latitude": "{latitude}",
-        "name": "{name}"
-    },
-    "leaveAt": "{leaveAt}",
-    "arriveBy": "{arriveBy}",
-    "seats": "{seats}",
+    "id": {{id}},
+    "driverId": {{driverId}},
+    "vehicleId": {{vehicleId}},
+    "full": {{full}},
+    "leaveAt": {{leaveAt}},
+    "arriveBy": {{arriveBy}},
+    "seats": {{seats}},
     "stops": [
+    	{
+    		"id": {{id}},
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	},
+            "seats": {{seats}},
+            "timestamp": {{timestamp}}
+    	},
         {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": "{name}"
-        }
+        	"id": {{id}},
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	},
+            "seats": {{seats}},
+            "timestamp": {{timestamp}}
+        },
+        {
+            "id": {{id}},
+        	"point": {
+        		"name": {{name}},
+	        	"longitude": {{longitude}},
+	        	"latitude": {{latitude}}
+        	},
+            "seats": {{seats}},
+            "timestamp": {{timestamp}}
+    	}
     ],
     "details": {
-        "animals": "{animals}",
-        "luggages": "{luggages}"
+        "animals": {{animals}},
+        "luggages": {{luggages}}
     }
 }
 ```

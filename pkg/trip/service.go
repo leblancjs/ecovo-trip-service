@@ -72,7 +72,7 @@ func (s *Service) Find(filters *entity.Filters) ([]*entity.Trip, error) {
 
 	t, err := s.repo.Find(filters)
 	if err != nil {
-		return []*entity.Trip{}, nil
+		return []*entity.Trip{}, err
 	}
 
 	return t, nil

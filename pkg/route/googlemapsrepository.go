@@ -31,29 +31,29 @@ func NewGoogleMapsRepository(client *maps.Client) (Repository, error) {
 func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 	var wp = make([]string, len(t.Stops))
 	for i, s := range t.Stops {
-		wp[i] = s.String()
+		wp[i] = s.Point.String()
 	}
 
 	var dr *maps.DirectionsRequest
 
 	if t.LeaveAt.IsZero() && !t.ArriveBy.IsZero() {
 		dr = &maps.DirectionsRequest{
-			Origin:      t.Source.String(),
-			Destination: t.Destination.String(),
+			Origin:      t.Stops[0].Point.String(),
+			Destination: t.Stops[len(t.Stops)-1].Point.String(),
 			Waypoints:   wp,
 			ArrivalTime: strconv.FormatInt(t.ArriveBy.Unix(), 10),
 		}
 	} else if !t.LeaveAt.IsZero() && t.ArriveBy.IsZero() {
 		dr = &maps.DirectionsRequest{
-			Origin:        t.Source.String(),
-			Destination:   t.Destination.String(),
+			Origin:        t.Stops[0].Point.String(),
+			Destination:   t.Stops[len(t.Stops)-1].Point.String(),
 			Waypoints:     wp,
 			DepartureTime: strconv.FormatInt(t.LeaveAt.Unix(), 10),
 		}
 	} else if !t.LeaveAt.IsZero() && !t.ArriveBy.IsZero() {
 		dr = &maps.DirectionsRequest{
-			Origin:        t.Source.String(),
-			Destination:   t.Destination.String(),
+			Origin:        t.Stops[0].Point.String(),
+			Destination:   t.Stops[len(t.Stops)-1].Point.String(),
 			Waypoints:     wp,
 			DepartureTime: strconv.FormatInt(t.LeaveAt.Unix(), 10),
 		}
@@ -66,6 +66,7 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 		log.Fatalf("trip.GoogleMapsRepository: : error getting directions, %s", err)
 	}
 
+	// Here we modify our trip data with google maps route generated
 	if len(r) > 0 {
 		route := r[0]
 
@@ -84,6 +85,23 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 			}
 			t.ArriveBy = arriveBy
 		}
+
+		var previousTimeStamp time.Time
+
+		for i, s := range t.Stops {
+			if i == 0 {
+				s.TimeStamp = t.LeaveAt
+			} else if i == (len(t.Stops) - 1) {
+				s.TimeStamp = t.ArriveBy
+			} else {
+				s.TimeStamp = previousTimeStamp.Add(route.Legs[i].Duration * time.Nanosecond)
+			}
+
+			previousTimeStamp = s.TimeStamp
+		}
+
+		// pretty.Println(route)
+		// TODO - return route to trip-service so it can do its intelligent search
 	}
 
 	return nil

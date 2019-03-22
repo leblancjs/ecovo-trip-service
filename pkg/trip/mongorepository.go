@@ -27,16 +27,22 @@ type MongoRepository struct {
 }
 
 type document struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	DriverID    primitive.ObjectID `bson:"driverId"`
-	VehicleID   primitive.ObjectID `bson:"vehicleId"`
-	Source      *entity.Point      `bson:"source"`
-	Destination *entity.Point      `bson:"destination"`
-	LeaveAt     time.Time          `bson:"leaveAt"`
-	ArriveBy    time.Time          `bson:"arriveBy"`
-	Seats       int                `bson:"seats"`
-	Stops       []*entity.Point    `bson:"stops"`
-	Details     *entity.Details    `bson:"details"`
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	DriverID  primitive.ObjectID `bson:"driverId"`
+	VehicleID primitive.ObjectID `bson:"vehicleId"`
+	Full      bool               `bson:"full"`
+	LeaveAt   time.Time          `bson:"leaveAt"`
+	ArriveBy  time.Time          `bson:"arriveBy"`
+	Seats     int                `bson:"seats"`
+	Stops     []*stop            `bson:"stops"`
+	Details   *entity.Details    `bson:"details"`
+}
+
+type stop struct {
+	ID        primitive.ObjectID `bson:"id"`
+	Point     *entity.Point      `bson:"point"`
+	Seats     int                `bson:"seats"`
+	TimeStamp time.Time          `bson:"timestamp"`
 }
 
 func newDocumentFromEntity(t *entity.Trip) (*document, error) {
@@ -44,40 +50,41 @@ func newDocumentFromEntity(t *entity.Trip) (*document, error) {
 		return nil, fmt.Errorf("trop.MongoRepository: entity is nil")
 	}
 
-	var id primitive.ObjectID
-	if t.ID.IsZero() {
-		id = primitive.NilObjectID
-	} else {
-		objectID, err := primitive.ObjectIDFromHex(t.ID.Hex())
-		if err != nil {
-			return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
-		}
-		id = objectID
-	}
-
-	var driverID primitive.ObjectID
-	driverID, err := primitive.ObjectIDFromHex(t.DriverID.Hex())
+	tripID, err := getObjectID(t.ID)
 	if err != nil {
-		return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
+		return nil, err
 	}
 
-	var vehicleID primitive.ObjectID
-	vehicleID, err = primitive.ObjectIDFromHex(t.VehicleID.Hex())
+	driverID, err := getObjectID(t.DriverID)
 	if err != nil {
-		return nil, fmt.Errorf("trip.MongoRepository: failed to create object")
+		return nil, err
 	}
 
-	var stops = make([]*entity.Point, len(t.Stops))
+	vehicleID, err := getObjectID(t.VehicleID)
+	if err != nil {
+		return nil, err
+	}
+
+	stops := make([]*stop, len(t.Stops))
 	for i, s := range t.Stops {
-		stops[i] = s
+		stopID, err := getObjectID(s.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		stops[i] = &stop{
+			stopID,
+			s.Point,
+			s.Seats,
+			s.TimeStamp,
+		}
 	}
 
 	return &document{
-		id,
+		tripID,
 		driverID,
 		vehicleID,
-		t.Source,
-		t.Destination,
+		t.Full,
 		t.LeaveAt,
 		t.ArriveBy,
 		t.Seats,
@@ -87,16 +94,25 @@ func newDocumentFromEntity(t *entity.Trip) (*document, error) {
 }
 
 func (d document) Entity() *entity.Trip {
+	stops := make([]*entity.Stop, len(d.Stops))
+	for i, s := range d.Stops {
+		stops[i] = &entity.Stop{
+			entity.NewIDFromHex(s.ID.Hex()),
+			s.Point,
+			s.Seats,
+			s.TimeStamp,
+		}
+	}
+
 	return &entity.Trip{
 		entity.NewIDFromHex(d.ID.Hex()),
 		entity.NewIDFromHex(d.DriverID.Hex()),
 		entity.NewIDFromHex(d.VehicleID.Hex()),
-		d.Source,
-		d.Destination,
+		d.Full,
 		d.LeaveAt,
 		d.ArriveBy,
 		d.Seats,
-		d.Stops,
+		stops,
 		d.Details,
 	}
 }
@@ -164,6 +180,12 @@ func (r *MongoRepository) Create(t *entity.Trip) (entity.ID, error) {
 		return entity.NilID, fmt.Errorf("trip.MongoRepository: failed to create trip (trip is nil)")
 	}
 
+	// Initialising stops data
+	for _, s := range t.Stops {
+		s.ID = entity.ID(primitive.NewObjectID().Hex())
+		s.Seats = t.Seats
+	}
+
 	d, err := newDocumentFromEntity(t)
 	if err != nil {
 		return entity.NilID, fmt.Errorf("trip.MongoRepository: failed to create trip document from entity (%s)", err)
@@ -198,8 +220,11 @@ func (r *MongoRepository) Delete(ID entity.ID) error {
 	return nil
 }
 
+// Creates a document based on filters
 func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 	d := bson.D{}
+
+	d = append(d, bson.E{"full", false})
 
 	if f.DriverID != "" {
 		objectID, err := primitive.ObjectIDFromHex(f.DriverID)
@@ -210,29 +235,25 @@ func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 		d = append(d, bson.E{"driverId", objectID})
 	}
 
-	if f.Seats != nil {
-		d = append(d, bson.E{"seats", *f.Seats})
-	}
+	// if f.Seats != nil {
+	// 	d = append(d, bson.E{
+	// 		"seats", bson.M{
+	// 			"$gte": *f.Seats,
+	// 		},
+	// 	})
+	// }
 
-	if f.DetailsAnimals != nil {
-		d = append(d, bson.E{"details.animals", *f.DetailsAnimals})
-	}
+	// if f.DetailsAnimals != nil {
+	// 	d = append(d, bson.E{"details.animals", *f.DetailsAnimals})
+	// }
 
-	if f.DetailsLuggages != nil {
-		d = append(d, bson.E{
-			"details.luggages", bson.M{
-				"$lte": *f.DetailsLuggages,
-			},
-		})
-	}
-
-	if f.DriverRating != nil {
-		d = append(d, bson.E{
-			"driver.driverRating", bson.M{
-				"$gte": f.DriverRating,
-			},
-		})
-	}
+	// if f.DetailsLuggages != nil {
+	// 	d = append(d, bson.E{
+	// 		"details.luggages", bson.M{
+	// 			"$lte": *f.DetailsLuggages,
+	// 		},
+	// 	})
+	// }
 
 	if !f.LeaveAt.IsZero() {
 		d = append(d, bson.E{
@@ -252,7 +273,7 @@ func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 
 	if f.DestinationLatitude != nil && f.DestinationLongitude != nil {
 		d = append(d, bson.E{
-			"destination", bson.M{
+			"stops.point", bson.M{
 				"$near": bson.M{
 					"$geometry": bson.M{
 						"type":        "Point",
@@ -262,19 +283,20 @@ func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 				},
 			},
 		})
-	} else if f.SourceLatitude != nil && f.SourceLongitude != nil {
-		d = append(d, bson.E{
-			"source", bson.M{
-				"$near": bson.M{
-					"$geometry": bson.M{
-						"type":        "Point",
-						"coordinates": []float64{*f.SourceLongitude, *f.SourceLatitude},
-					},
-					"$maxDistance": radiusThresh,
-				},
-			},
-		})
 	}
 
 	return d, nil
+}
+
+// Gets an object ID from an entity of type ID
+func getObjectID(rawID entity.ID) (primitive.ObjectID, error) {
+	if rawID.IsZero() {
+		return primitive.NilObjectID, nil
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(rawID.Hex())
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("trip.MongoRepository: failed to create object")
+	}
+	return objectID, nil
 }
