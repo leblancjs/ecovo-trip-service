@@ -222,7 +222,11 @@ func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 	}
 
 	if f.DetailsLuggages != nil {
-		d = append(d, bson.E{"details.luggages", *f.DetailsLuggages})
+		d = append(d, bson.E{
+			"details.luggages", bson.M{
+				"$lte": *f.DetailsLuggages,
+			},
+		})
 	}
 
 	if f.DriverRating != nil {
