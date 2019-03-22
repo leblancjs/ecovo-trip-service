@@ -192,14 +192,7 @@ Content-Type: application/json
     "details": {
         "animals": "{animals}",
         "luggages": "{luggages}"
-    },
-    "steps": [
-        {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": ""
-        },
-    ]
+    }
 }
 ```
 
@@ -286,14 +279,7 @@ Content-Type: application/json
         "details": {
             "animals": "{animals}",
             "luggages": "{luggages}"
-        },
-        "steps": [
-            {
-                "longitude": "{longitude}",
-                "latitude": "{latitude}",
-                "name": ""
-            },
-        ]
+        }
     },
 ]
 ```
@@ -342,14 +328,7 @@ Authorization: Bearer {access_token}
     "details": {
         "animals": "{animals}",
         "luggages": "{luggages}"
-    },
-    "steps": [
-        {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": ""
-        }
-    ],
+    }
 }
 ```
 
@@ -395,14 +374,7 @@ Content-Type: application/json
     "details": {
         "animals": "{animals}",
         "luggages": "{luggages}"
-    },
-    "steps": [
-        {
-            "longitude": "{longitude}",
-            "latitude": "{latitude}",
-            "name": ""
-        },
-    ]
+    }
 }
 ```
 

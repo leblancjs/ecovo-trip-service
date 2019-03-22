@@ -37,7 +37,6 @@ type document struct {
 	Seats       int                `bson:"seats"`
 	Stops       []*entity.Point    `bson:"stops"`
 	Details     *entity.Details    `bson:"details"`
-	Steps       []*entity.Point    `bson:"steps"`
 }
 
 func newDocumentFromEntity(t *entity.Trip) (*document, error) {
@@ -84,7 +83,6 @@ func newDocumentFromEntity(t *entity.Trip) (*document, error) {
 		t.Seats,
 		stops,
 		t.Details,
-		t.Steps,
 	}, nil
 }
 
@@ -100,7 +98,6 @@ func (d document) Entity() *entity.Trip {
 		d.Seats,
 		d.Stops,
 		d.Details,
-		d.Steps,
 	}
 }
 

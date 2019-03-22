@@ -84,14 +84,6 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 			}
 			t.ArriveBy = arriveBy
 		}
-
-		for _, l := range route.Legs {
-			for _, s := range l.Steps {
-				if s.EndLocation.String() != "" {
-					t.Steps = append(t.Steps, &entity.Point{s.EndLocation.Lng, s.EndLocation.Lat, ""})
-				}
-			}
-		}
 	}
 
 	return nil
