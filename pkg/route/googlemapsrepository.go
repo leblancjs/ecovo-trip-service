@@ -3,7 +3,6 @@ package route
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
@@ -63,7 +62,7 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 
 	r, _, err := gr.client.Directions(context.Background(), dr)
 	if err != nil {
-		log.Fatalf("trip.GoogleMapsRepository: : error getting directions, %s", err)
+		fmt.Errorf("trip.GoogleMapsRepository: error getting directions, %s", err)
 	}
 
 	// Here we modify our trip data with google maps route generated
@@ -102,6 +101,8 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 
 		// pretty.Println(route)
 		// TODO - return route to trip-service so it can do its intelligent search
+	} else {
+		return fmt.Errorf("trip.GoogleMapsRepository: no trips found in google map repository")
 	}
 
 	return nil

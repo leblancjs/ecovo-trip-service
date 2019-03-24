@@ -32,10 +32,6 @@ func (t *Trip) Validate() error {
 		return ValidationError{"leaveAt or arriveBy is missing"}
 	}
 
-	if !t.LeaveAt.IsZero() && !t.ArriveBy.IsZero() {
-		return ValidationError{"can't have leaveAt and arriveBy"}
-	}
-
 	if !t.LeaveAt.IsZero() && t.LeaveAt.Before(time.Now()) {
 		return ValidationError{"leaveAt must be in the future"}
 	}

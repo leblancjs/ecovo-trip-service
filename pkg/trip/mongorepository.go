@@ -204,6 +204,29 @@ func (r *MongoRepository) Create(t *entity.Trip) (entity.ID, error) {
 	return entity.ID(ID.Hex()), nil
 }
 
+// Update updates the trip in the database.
+func (r *MongoRepository) Update(t *entity.Trip) error {
+	d, err := newDocumentFromEntity(t)
+	if err != nil {
+		return fmt.Errorf("trip.MongoRepository: failed to create trip document from entity (%s)", err)
+	}
+
+	filter := bson.D{{"_id", d.ID}}
+	update := bson.D{
+		bson.E{"$set", d},
+	}
+	res, err := r.collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return fmt.Errorf("trip.MongoRepository: failed to update trip with ID \"%s\" (%s)", t.ID, err)
+	}
+
+	if res.MatchedCount <= 0 {
+		return fmt.Errorf("trip.MongoRepository: no matching trip was found")
+	}
+
+	return nil
+}
+
 // Delete removes the trip with the given ID from the database.
 func (r *MongoRepository) Delete(ID entity.ID) error {
 	objectID, err := primitive.ObjectIDFromHex(ID.Hex())

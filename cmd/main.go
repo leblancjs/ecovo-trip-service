@@ -9,6 +9,7 @@ import (
 	"azure.com/ecovo/trip-service/cmd/handler"
 	"azure.com/ecovo/trip-service/cmd/middleware/auth"
 	"azure.com/ecovo/trip-service/pkg/db"
+	"azure.com/ecovo/trip-service/pkg/reservation"
 	"azure.com/ecovo/trip-service/pkg/route"
 	"azure.com/ecovo/trip-service/pkg/trip"
 	"github.com/gorilla/handlers"
@@ -68,6 +69,8 @@ func main() {
 	}
 	tripUseCase := trip.NewService(tripRepository, routeUseCase)
 
+	reservationUseCase := reservation.NewService(tripUseCase)
+
 	r := mux.NewRouter()
 
 	// Trips
@@ -79,6 +82,12 @@ func main() {
 	r.Handle("/trips", handler.RequestID(handler.Auth(authValidators, handler.CreateTrip(tripUseCase)))).
 		Methods("POST").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
+	r.Handle("/trips/{id}/reservation", handler.RequestID(handler.Auth(authValidators, handler.CreateReservation(reservationUseCase)))).
+		Methods("POST").
+		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
+	r.Handle("/trips/{id}/reservation", handler.RequestID(handler.Auth(authValidators, handler.DeleteReservation(reservationUseCase)))).
+		Methods("DELETE").
+		HeadersRegexp("Content-Type", "application/json")
 	r.Handle("/trips/{id}", handler.RequestID(handler.Auth(authValidators, handler.DeleteTrip(tripUseCase)))).
 		Methods("DELETE").
 		HeadersRegexp("Content-Type", "application/json")

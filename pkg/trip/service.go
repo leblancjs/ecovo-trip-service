@@ -13,6 +13,7 @@ type UseCase interface {
 	Register(t *entity.Trip) (*entity.Trip, error)
 	FindByID(ID entity.ID) (*entity.Trip, error)
 	Find(filters *entity.Filters) ([]*entity.Trip, error)
+	Update(t *entity.Trip) error
 	Delete(ID entity.ID) error
 }
 
@@ -76,6 +77,34 @@ func (s *Service) Find(filters *entity.Filters) ([]*entity.Trip, error) {
 	}
 
 	return t, nil
+}
+
+// Update validates that the trip contains all the required personal
+// information, that all values are correct and well formatted, and persists
+// the modified trip in the repository.
+func (s *Service) Update(modifiedTrip *entity.Trip) error {
+	if modifiedTrip == nil {
+		return fmt.Errorf("trip.Service: modified trip is nil")
+	}
+
+	t, err := s.repo.FindByID(entity.ID(modifiedTrip.ID))
+	if err != nil {
+		return NotFoundError{err.Error()}
+	}
+
+	err = modifiedTrip.Validate()
+	if err != nil {
+		return err
+	}
+
+	t = modifiedTrip
+
+	err = s.repo.Update(t)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete erases the trip from the repository.
