@@ -14,6 +14,8 @@ type Filters struct {
 	DetailsAnimals       *int      `schema:"detailsAnimals,ommitempty"`
 	DetailsLuggages      *int      `schema:"detailsLuggages,ommitempty"`
 	RadiusThresh         *int      `schema:"radiusThresh,ommitempty"`
+	SourceLatitude       *float64  `schema:"sourceLatitude,ommitempty"`
+	SourceLongitude      *float64  `schema:"sourceLongitude,ommitempty"`
 	DestinationLatitude  *float64  `schema:"destinationLatitude,ommitempty"`
 	DestinationLongitude *float64  `schema:"destinationLongitude,ommitempty"`
 }
@@ -55,6 +57,14 @@ func (f *Filters) Validate() error {
 
 	if f.RadiusThresh != nil && *f.RadiusThresh <= MinimumRadiusThresh {
 		return ValidationError{fmt.Sprintf("radiusThresh must be greater than %d", MinimumRadiusThresh)}
+	}
+
+	if f.SourceLongitude != nil && (*f.SourceLongitude < MinimumLongitude || *f.SourceLongitude > MaximumLongitude) {
+		return ValidationError{"invalid source longitude value"}
+	}
+
+	if f.SourceLatitude != nil && (*f.SourceLatitude < MinimumLatitude || *f.SourceLatitude > MaximumLatitude) {
+		return ValidationError{"invalid source latitude value"}
 	}
 
 	if f.DestinationLongitude != nil && (*f.DestinationLongitude < MinimumLongitude || *f.DestinationLongitude > MaximumLongitude) {
