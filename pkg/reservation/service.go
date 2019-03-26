@@ -58,6 +58,8 @@ func (s *Service) Register(r *entity.Reservation) error {
 		}
 	}
 
+	t.UpdateReservationCount(r.Seats)
+
 	err = s.tripService.Update(t)
 	if err != nil {
 		return err
@@ -98,6 +100,8 @@ func (s *Service) Delete(r *entity.Reservation) error {
 			s.Seats += r.Seats
 		}
 	}
+
+	t.UpdateReservationCount(-r.Seats)
 
 	err = s.tripService.Update(t)
 	if err != nil {

@@ -27,15 +27,18 @@ type MongoRepository struct {
 }
 
 type document struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	DriverID  primitive.ObjectID `bson:"driverId"`
-	VehicleID primitive.ObjectID `bson:"vehicleId"`
-	Full      bool               `bson:"full"`
-	LeaveAt   time.Time          `bson:"leaveAt"`
-	ArriveBy  time.Time          `bson:"arriveBy"`
-	Seats     int                `bson:"seats"`
-	Stops     []*stop            `bson:"stops"`
-	Details   *entity.Details    `bson:"details"`
+	ID                primitive.ObjectID `bson:"_id,omitempty"`
+	DriverID          primitive.ObjectID `bson:"driverId"`
+	VehicleID         primitive.ObjectID `bson:"vehicleId"`
+	Full              bool               `bson:"full"`
+	LeaveAt           time.Time          `bson:"leaveAt"`
+	ArriveBy          time.Time          `bson:"arriveBy"`
+	Seats             int                `bson:"seats"`
+	Stops             []*stop            `bson:"stops"`
+	Details           *entity.Details    `bson:"details"`
+	ReservationsCount int                `bson:"reservationsCount"`
+	PricePerSeat      float64            `bson:"pricePerSeat"`
+	TotalDistance     int                `bson:"totalDistance"`
 }
 
 type stop struct {
@@ -90,6 +93,9 @@ func newDocumentFromEntity(t *entity.Trip) (*document, error) {
 		t.Seats,
 		stops,
 		t.Details,
+		t.ReservationsCount,
+		t.PricePerSeat,
+		t.TotalDistance,
 	}, nil
 }
 
@@ -114,6 +120,9 @@ func (d document) Entity() *entity.Trip {
 		d.Seats,
 		stops,
 		d.Details,
+		d.ReservationsCount,
+		d.PricePerSeat,
+		d.TotalDistance,
 	}
 }
 

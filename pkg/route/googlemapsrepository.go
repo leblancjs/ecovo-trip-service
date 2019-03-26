@@ -62,7 +62,7 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 
 	r, _, err := gr.client.Directions(context.Background(), dr)
 	if err != nil {
-		fmt.Errorf("trip.GoogleMapsRepository: error getting directions, %s", err)
+		return fmt.Errorf("trip.GoogleMapsRepository: error getting directions, %s", err)
 	}
 
 	// Here we modify our trip data with google maps route generated
@@ -72,6 +72,7 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 		if t.LeaveAt.IsZero() {
 			leaveAt := t.ArriveBy
 			for i := range route.Legs {
+				t.TotalDistance += route.Legs[i].Distance.Meters
 				leaveAt = leaveAt.Add(-(route.Legs[i].Duration) * time.Nanosecond)
 			}
 			t.LeaveAt = leaveAt
@@ -80,6 +81,7 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 		if t.ArriveBy.IsZero() {
 			arriveBy := t.LeaveAt
 			for i := range route.Legs {
+				t.TotalDistance += route.Legs[i].Distance.Meters
 				arriveBy = arriveBy.Add(route.Legs[i].Duration * time.Nanosecond)
 			}
 			t.ArriveBy = arriveBy
@@ -99,7 +101,6 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 			previousTimeStamp = s.TimeStamp
 		}
 
-		// pretty.Println(route)
 		// TODO - return route to trip-service so it can do its intelligent search
 	} else {
 		return fmt.Errorf("trip.GoogleMapsRepository: no trips found in google map repository")

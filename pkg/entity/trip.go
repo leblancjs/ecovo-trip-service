@@ -7,15 +7,18 @@ import (
 
 // Trip contains a trips's information.
 type Trip struct {
-	ID        ID        `json:"id"`
-	DriverID  ID        `json:"driverId"`
-	VehicleID ID        `json:"vehicleId"`
-	Full      bool      `json:"full"`
-	LeaveAt   time.Time `json:"leaveAt"`
-	ArriveBy  time.Time `json:"arriveBy"`
-	Seats     int       `json:"seats"`
-	Stops     []*Stop   `json:"stops"`
-	Details   *Details  `json:"details"`
+	ID                ID        `json:"id"`
+	DriverID          ID        `json:"driverId"`
+	VehicleID         ID        `json:"vehicleId"`
+	Full              bool      `json:"full"`
+	LeaveAt           time.Time `json:"leaveAt"`
+	ArriveBy          time.Time `json:"arriveBy"`
+	Seats             int       `json:"seats"`
+	Stops             []*Stop   `json:"stops"`
+	Details           *Details  `json:"details"`
+	ReservationsCount int       `json:"reservationsCount"`
+	PricePerSeat      float64   `json:"pricePerSeat"`
+	TotalDistance     int       `json:"totalDistance"`
 }
 
 const (
@@ -24,6 +27,17 @@ const (
 
 	// MaximumSeats represents the maximum seats possible in a car.
 	MaximumSeats = 10
+
+	// MinimumPricePerSeat represents the minimum price per seat possible.
+	MinimumPricePerSeat = 0.0
+
+	// MinimumTotalDistance represents the minimum total distance possible in meters.
+	MinimumTotalDistance = 0.0
+
+	// PricePerKilometer represents the price (in dollars) established by the Canadian
+	// government as the maximum allocation for vehicle usage.
+	// https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/retenues-paie/avantages-allocations/automobile/allocations-frais-automobile-vehicule-a-moteur/taux-allocations-frais-automobile.html
+	PricePerKilometer = 0.58
 )
 
 // Validate validates that the trips's required fields are filled out correctly.
@@ -52,6 +66,14 @@ func (t *Trip) Validate() error {
 		return ValidationError{fmt.Sprintf("number of seats must be between %d and %d", MinimumSeats, MaximumSeats)}
 	}
 
+	if t.PricePerSeat < MinimumPricePerSeat {
+		return ValidationError{fmt.Sprintf("pricePerSeat must be greater %f", MinimumPricePerSeat)}
+	}
+
+	if t.TotalDistance < MinimumTotalDistance {
+		return ValidationError{fmt.Sprintf("totalDistance must be greater %f", MinimumTotalDistance)}
+	}
+
 	if t.Details != nil {
 		err := t.Details.Validate()
 		if err != nil {
@@ -73,4 +95,19 @@ func (t *Trip) Validate() error {
 	}
 
 	return nil
+}
+
+// UpdateReservationCount will update the number of seats available on a trip and update
+// seats price. The price evaluated is the maximum pricing possible based on the government
+// allocation for vehicles.
+func (t *Trip) UpdateReservationCount(seats int) {
+	t.ReservationsCount += seats
+	totalPrice := float64(t.TotalDistance/1000.0) * PricePerKilometer
+
+	// We device the total price by the number of reservations
+	if t.ReservationsCount == 0 {
+		t.PricePerSeat = totalPrice
+	} else {
+		t.PricePerSeat = totalPrice / float64(t.ReservationsCount)
+	}
 }
