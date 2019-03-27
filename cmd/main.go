@@ -9,9 +9,12 @@ import (
 	"azure.com/ecovo/trip-service/cmd/handler"
 	"azure.com/ecovo/trip-service/cmd/middleware/auth"
 	"azure.com/ecovo/trip-service/pkg/db"
+	"azure.com/ecovo/trip-service/pkg/pubsub"
+	"azure.com/ecovo/trip-service/pkg/pubsub/subscription"
 	"azure.com/ecovo/trip-service/pkg/reservation"
 	"azure.com/ecovo/trip-service/pkg/route"
 	"azure.com/ecovo/trip-service/pkg/trip"
+	"github.com/ably/ably-go/ably"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"googlemaps.github.io/maps"
@@ -55,6 +58,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ablyClient, err := ably.NewRestClient(ably.NewClientOptions(os.Getenv("ABLY_API_KEY")))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ablyPubSubRepository, err := subscription.NewAblyRepository(ablyClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pubSubService := pubsub.NewService(ablyPubSubRepository)
+
 	mapsClient, err := maps.NewClient(maps.WithAPIKey(os.Getenv("API_KEY")))
 
 	routeRepository, err := route.NewGoogleMapsRepository(mapsClient)
@@ -67,7 +81,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tripUseCase := trip.NewService(tripRepository, routeUseCase)
+	tripUseCase := trip.NewService(tripRepository, pubSubService, routeUseCase)
 
 	reservationUseCase := reservation.NewService(tripUseCase)
 

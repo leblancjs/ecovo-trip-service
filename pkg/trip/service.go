@@ -2,8 +2,11 @@ package trip
 
 import (
 	"fmt"
+	"log"
 
 	"azure.com/ecovo/trip-service/pkg/entity"
+	"azure.com/ecovo/trip-service/pkg/pubsub"
+	"azure.com/ecovo/trip-service/pkg/pubsub/subscription"
 	"azure.com/ecovo/trip-service/pkg/route"
 )
 
@@ -20,13 +23,24 @@ type UseCase interface {
 // A Service handles the business logic related to trips.
 type Service struct {
 	repo         Repository
+	subscription subscription.Subscription
 	routeService route.UseCase
 }
 
+const (
+	// topic represents the topic for ably subscription
+	topic = "trips"
+)
+
 // NewService creates a trip service to handle business logic and manipulate
 // trips through a repository.
-func NewService(repo Repository, routeService route.UseCase) *Service {
-	return &Service{repo, routeService}
+func NewService(repo Repository, pubSubService pubsub.UseCase, routeService route.UseCase) *Service {
+	sub, err := pubSubService.Subscribe(topic)
+	if err != nil {
+		return nil
+	}
+
+	return &Service{repo, sub, routeService}
 }
 
 // Register validates the trips's information
@@ -49,6 +63,11 @@ func (s *Service) Register(t *entity.Trip) (*entity.Trip, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	err = s.subscription.Publish(&subscription.Message{
+		Type: EventTripAdded,
+		Data: t,
+	})
 
 	return t, nil
 }
@@ -102,6 +121,15 @@ func (s *Service) Update(modifiedTrip *entity.Trip) error {
 	err = s.repo.Update(t)
 	if err != nil {
 		return err
+	}
+
+	err = s.subscription.Publish(&subscription.Message{
+		Type: EventTripChanged,
+		Data: t,
+	})
+
+	if err != nil {
+		log.Println(err)
 	}
 
 	return nil
