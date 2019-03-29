@@ -275,17 +275,17 @@ func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 	// 	})
 	// }
 
-	// if f.DetailsAnimals != nil {
-	// 	d = append(d, bson.E{"details.animals", *f.DetailsAnimals})
-	// }
+	if f.DetailsAnimals != nil {
+		d = append(d, bson.E{"details.animals", *f.DetailsAnimals})
+	}
 
-	// if f.DetailsLuggages != nil {
-	// 	d = append(d, bson.E{
-	// 		"details.luggages", bson.M{
-	// 			"$lte": *f.DetailsLuggages,
-	// 		},
-	// 	})
-	// }
+	if f.DetailsLuggages != nil {
+		d = append(d, bson.E{
+			"details.luggages", bson.M{
+				"$lte": *f.DetailsLuggages,
+			},
+		})
+	}
 
 	if !f.LeaveAt.IsZero() {
 		d = append(d, bson.E{
@@ -296,26 +296,35 @@ func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 		})
 	}
 
-	radiusThresh := 0
-	if f.RadiusThresh != nil {
-		radiusThresh = *f.RadiusThresh
-	} else {
-		radiusThresh = DefaultRadius
-	}
-
-	if f.DestinationLatitude != nil && f.DestinationLongitude != nil {
+	if !f.ArriveBy.IsZero() {
 		d = append(d, bson.E{
-			"stops.point", bson.M{
-				"$near": bson.M{
-					"$geometry": bson.M{
-						"type":        "Point",
-						"coordinates": []float64{*f.DestinationLongitude, *f.DestinationLatitude},
-					},
-					"$maxDistance": radiusThresh,
-				},
+			"arriveBy", bson.M{
+				"$gt": f.ArriveBy.Add(time.Hour * (-TimeThreshold)),
+				"$lt": f.ArriveBy.Add(time.Hour * TimeThreshold),
 			},
 		})
 	}
+
+	// radiusThresh := 0
+	// if f.RadiusThresh != nil {
+	// 	radiusThresh = *f.RadiusThresh
+	// } else {
+	// 	radiusThresh = DefaultRadius
+	// }
+
+	// if f.DestinationLatitude != nil && f.DestinationLongitude != nil {
+	// 	d = append(d, bson.E{
+	// 		"stops.point", bson.M{
+	// 			"$near": bson.M{
+	// 				"$geometry": bson.M{
+	// 					"type":        "Point",
+	// 					"coordinates": []float64{*f.DestinationLongitude, *f.DestinationLatitude},
+	// 				},
+	// 				"$maxDistance": radiusThresh,
+	// 			},
+	// 		},
+	// 	})
+	// }
 
 	return d, nil
 }

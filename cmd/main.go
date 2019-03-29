@@ -69,7 +69,10 @@ func main() {
 	}
 	pubSubService := pubsub.NewService(ablyPubSubRepository)
 
-	mapsClient, err := maps.NewClient(maps.WithAPIKey(os.Getenv("API_KEY")))
+	mapsClient, err := maps.NewClient(maps.WithAPIKey(os.Getenv("GOOGLE_MAPS_API_KEY")))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	routeRepository, err := route.NewGoogleMapsRepository(mapsClient)
 	if err != nil {

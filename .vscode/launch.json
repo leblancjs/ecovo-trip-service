@@ -17,8 +17,8 @@
                 "DB_USERNAME": "ecovo_rw",
                 "DB_PASSWORD": "q4GVRkQmPDwOVADz",
                 "DB_NAME": "ecovo",
-                "API_KEY": "AIzaSyAeJwTf3l8i7YPyXY5VnDGWkapiPpGqRlE",
-                "ABLY_API_KEY": "VfrzOg.bgLV3Q:h9hyzZQOGrvTl_4I"
+                "GOOGLE_MAPS_API_KEY": "AIzaSyAeJwTf3l8i7YPyXY5VnDGWkapiPpGqRlE",
+                "ABLY_API_KEY": "VfrzOg.bgLV3Q:h9hyzZQOGrvTl_4I",
             },
             "args": []
         }

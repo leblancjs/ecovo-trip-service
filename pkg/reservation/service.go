@@ -42,8 +42,9 @@ func (s *Service) Register(r *entity.Reservation) error {
 	}
 
 	// We remove seats we want to reserve on the trip
+	isFull := true
 	isInTrip := false
-	for _, s := range t.Stops {
+	for id, s := range t.Stops {
 		if r.SourceID == s.ID {
 			isInTrip = true
 		} else if r.DestinationID == s.ID {
@@ -56,8 +57,13 @@ func (s *Service) Register(r *entity.Reservation) error {
 			}
 			s.Seats -= r.Seats
 		}
+
+		if id != (len(t.Stops)-1) && s.Seats > 0 {
+			isFull = false
+		}
 	}
 
+	t.Full = isFull
 	t.UpdateReservationCount(r.Seats)
 
 	err = s.tripService.Update(t)
@@ -101,6 +107,7 @@ func (s *Service) Delete(r *entity.Reservation) error {
 		}
 	}
 
+	t.Full = false
 	t.UpdateReservationCount(-r.Seats)
 
 	err = s.tripService.Update(t)

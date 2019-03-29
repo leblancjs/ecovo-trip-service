@@ -204,7 +204,10 @@ Content-Type: application/json
     "details": {
         "animals": {{animals}},
         "luggages": {{luggages}}
-    }
+    },
+    "reservationsCount": {{reservationCount}},
+	"pricePerSeat": {{pricePerSeat}},
+	"totalDistance: {{totalDistance}}
 }
 ```
 
@@ -303,7 +306,10 @@ Content-Type: application/json
         "details": {
             "animals": {{animals}},
             "luggages": {{luggages}}
-        }
+        },
+        "reservationsCount": {{reservationCount}},
+        "pricePerSeat": {{pricePerSeat}},
+        "totalDistance: {{totalDistance}}
     },
 ]
 ```
@@ -413,7 +419,10 @@ Content-Type: application/json
     "details": {
         "animals": {{animals}},
         "luggages": {{luggages}}
-    }
+    },
+    "reservationsCount": {{reservationCount}},
+	"pricePerSeat": {{pricePerSeat}},
+	"totalDistance: {{totalDistance}}
 }
 ```
 
