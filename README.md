@@ -166,8 +166,8 @@ Content-Type: application/json
     "driverId": {{driverId}},
     "vehicleId": {{vehicleId}},
     "full": {{full}},
-    "leaveAt": {{leaveAt}},
-    "arriveBy": {{arriveBy}},
+    "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
+    "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
     "seats": {{seats}},
     "stops": [
     	{
@@ -268,8 +268,8 @@ Content-Type: application/json
         "driverId": {{driverId}},
         "vehicleId": {{vehicleId}},
         "full": {{full}},
-        "leaveAt": {{leaveAt}},
-        "arriveBy": {{arriveBy}},
+        "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
+        "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
         "seats": {{seats}},
         "stops": [
             {
@@ -332,8 +332,8 @@ Authorization: Bearer {access_token}
     "driverId": {{driverId}},
     "vehicleId": {{vehicleId}},
     "full": {{full}},
-    "leaveAt": {{leaveAt}},
-    "arriveBy": {{arriveBy}},
+    "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
+    "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
     "seats": {{seats}},
     "stops": [
     	{
@@ -381,8 +381,8 @@ Content-Type: application/json
     "driverId": {{driverId}},
     "vehicleId": {{vehicleId}},
     "full": {{full}},
-    "leaveAt": {{leaveAt}},
-    "arriveBy": {{arriveBy}},
+    "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
+    "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
     "seats": {{seats}},
     "stops": [
     	{
