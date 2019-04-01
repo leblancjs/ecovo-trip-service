@@ -15,6 +15,13 @@ type GoogleMapsRepository struct {
 	client *maps.Client
 }
 
+const (
+	// PricePerKilometer represents the price (in dollars) established by the Canadian
+	// government as the maximum allocation for vehicle usage.
+	// https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/retenues-paie/avantages-allocations/automobile/allocations-frais-automobile-vehicule-a-moteur/taux-allocations-frais-automobile.html
+	PricePerKilometer = 0.58
+)
+
 // NewGoogleMapsRepository creates the repository
 func NewGoogleMapsRepository(client *maps.Client) (Repository, error) {
 	if client == nil {
@@ -101,7 +108,7 @@ func (gr *GoogleMapsRepository) GenerateRoute(t *entity.Trip) error {
 			previousTimeStamp = s.TimeStamp
 		}
 
-		// TODO - return route to trip-service so it can do its intelligent search
+		t.TotalTripPrice = float64(t.TotalDistance/1000.0) * PricePerKilometer
 	} else {
 		return fmt.Errorf("trip.GoogleMapsRepository: no trips found in google map repository")
 	}

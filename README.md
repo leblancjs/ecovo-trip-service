@@ -164,7 +164,12 @@ Content-Type: application/json
 {
     "id": {{id}},
     "driverId": {{driverId}},
-    "vehicleId": {{vehicleId}},
+    "vehicle": {
+        "id": {{id}},
+        "make": {{make}},
+        "year": {{year}},
+        "model": {{model}}
+    },
     "full": {{full}},
     "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
     "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
@@ -206,6 +211,7 @@ Content-Type: application/json
         "luggages": {{luggages}}
     },
     "reservationsCount": {{reservationCount}},
+    "totalTripPrice": {{totalTripPrice}},
 	"pricePerSeat": {{pricePerSeat}},
 	"totalDistance: {{totalDistance}}
 }
@@ -266,7 +272,12 @@ Content-Type: application/json
     {
         "id": {{id}},
         "driverId": {{driverId}},
-        "vehicleId": {{vehicleId}},
+        "vehicle": {
+            "id": {{id}},
+            "make": {{make}},
+            "year": {{year}},
+            "model": {{model}}
+        },
         "full": {{full}},
         "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
         "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
@@ -308,6 +319,7 @@ Content-Type: application/json
             "luggages": {{luggages}}
         },
         "reservationsCount": {{reservationCount}},
+        "totalTripPrice": {{totalTripPrice}},
         "pricePerSeat": {{pricePerSeat}},
         "totalDistance: {{totalDistance}}
     },
@@ -330,7 +342,12 @@ Authorization: Bearer {access_token}
 ```
 {
     "driverId": {{driverId}},
-    "vehicleId": {{vehicleId}},
+    "vehicle": {
+        "id": {{id}},
+        "make": {{make}},
+        "year": {{year}},
+        "model": {{model}}
+    },
     "full": {{full}},
     "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
     "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
@@ -379,7 +396,12 @@ Content-Type: application/json
 {
     "id": {{id}},
     "driverId": {{driverId}},
-    "vehicleId": {{vehicleId}},
+    "vehicle": {
+        "id": {{id}},
+        "make": {{make}},
+        "year": {{year}},
+        "model": {{model}}
+    },
     "full": {{full}},
     "leaveAt": {{leaveAt}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
     "arriveBy": {{arriveBy}}, **format : YYYY-MM-DDThh:mm:ss.sZ**
@@ -421,6 +443,7 @@ Content-Type: application/json
         "luggages": {{luggages}}
     },
     "reservationsCount": {{reservationCount}},
+    "totalTripPrice": {{totalTripPrice}},
 	"pricePerSeat": {{pricePerSeat}},
 	"totalDistance: {{totalDistance}}
 }
