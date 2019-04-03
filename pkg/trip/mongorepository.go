@@ -280,7 +280,7 @@ func newDocumentFromFilters(f *entity.Filters) (bson.D, error) {
 	if f.DetailsLuggages != nil {
 		d = append(d, bson.E{
 			"details.luggages", bson.M{
-				"$lte": *f.DetailsLuggages,
+				"$gte": *f.DetailsLuggages,
 			},
 		})
 	}
