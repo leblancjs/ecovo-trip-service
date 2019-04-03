@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"azure.com/ecovo/trip-service/cmd/middleware/auth"
+	"azure.com/ecovo/trip-service/pkg/entity"
 	"azure.com/ecovo/trip-service/pkg/trip"
 )
 
@@ -28,6 +29,8 @@ func WrapError(err error) *Error {
 		return &Error{http.StatusUnauthorized, "unauthorized", err}
 	} else if _, ok := err.(trip.NotFoundError); ok {
 		return &Error{http.StatusNotFound, "trip does not exist", err}
+	} else if _, ok := err.(entity.ValidationError); ok {
+		return &Error{http.StatusBadRequest, err.Error(), err}
 	} else {
 		return &Error{
 			http.StatusInternalServerError,
